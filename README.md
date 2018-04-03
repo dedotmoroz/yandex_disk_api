@@ -2,8 +2,8 @@
 Create React App for Yandex Disk API
 Простой клиент для Yandex Disk, который позволяет просматривать и загружать файлы из Yandex Disk.
 Написан на чистом React 16.3.0 без использования дополнительный библиотек. Все компоненты находятся в одном файле - index.js
-Среда разработки устанавливается: npm react-create-app yandexdisk
-Примеры работы https://apps-4-you.com/yadisk/
+Среда разработки устанавливается: npm react-create-app yandexdisk.
+Пример работы https://apps-4-you.com/yadisk/
 
 Принцип работы:
 1. Компонент App проверяет наличие токена в hash или в cookie браузера. Если ничего из этого нет, то отображается компонент Token.
