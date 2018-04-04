@@ -6,7 +6,6 @@ import './css/styles.css';
 // Yandex REST API (OAuth 2.0)
 const CLIENT_ID = "500dea2d0ffe40e6b2c13cc6f1ae72b6";
 const AUTH_TOKEN = "https://oauth.yandex.ru/authorize?response_type=token&client_id=500dea2d0ffe40e6b2c13cc6f1ae72b6&redirect_uri=https://apps-4-you.com/yadisk/";
-//const AUTH_TOKEN = "http://localhost:3000/#access_token=AQAAAAAAAThbAATatSm06ZDdvEJ2hprKA2KoB5A&token_type=bearer&expires_in=30076128";
 // Yandex.Disc API
 const  API_FOLDERS = "https://cloud-api.yandex.net/v1/disk/resources?path=";
 const  API_FILES = "https://cloud-api.yandex.net/v1/disk/resources/download?path=";
