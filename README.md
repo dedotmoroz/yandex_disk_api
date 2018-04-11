@@ -5,6 +5,8 @@ Create React App for Yandex Disk API
 Среда разработки устанавливается: npm react-create-app yandexdisk.
 Пример работы https://apps-4-you.com/yadisk/
 
+<img src="/screen.png" width="435" alt="yandex disk api">
+
 Принцип работы:
 1. Компонент App проверяет наличие токена в hash или в cookie браузера. Если ничего из этого нет, то отображается компонент Token.
 2. Компонент Token отправляет пользователя на страницу авторизации Яндекс.OAuth с запросом token для данного приложения.
