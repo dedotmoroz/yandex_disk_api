@@ -1,3 +1,6 @@
+import 'core-js/es6/map';
+import 'core-js/es6/set';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './css/bootstrap.css';
@@ -5,17 +8,17 @@ import './css/styles.css';
 
 // Yandex REST API (OAuth 2.0)
 const CLIENT_ID = "500dea2d0ffe40e6b2c13cc6f1ae72b6";
-const AUTH_TOKEN = "https://oauth.yandex.ru/authorize?response_type=token&client_id=500dea2d0ffe40e6b2c13cc6f1ae72b6&redirect_uri=https://apps-4-you.com/yadisk/";
-//const AUTH_TOKEN = "http://localhost:3000/#access_token=AQAAAAAAAThbAATatSm06ZDdvEJ2hprKA2KoB5A&token_type=bearer&expires_in=30076128";
+//const AUTH_TOKEN = "https://oauth.yandex.ru/authorize?response_type=token&client_id=500dea2d0ffe40e6b2c13cc6f1ae72b6&redirect_uri=https://apps-4-you.com/yadisk/";
+const AUTH_TOKEN = "http://localhost:3000/#access_token=AQAAAAAAAThbAATatSm06ZDdvEJ2hprKA2KoB5A&token_type=bearer&expires_in=30076128";
 // Yandex.Disc API
-const  API_FOLDERS = "https://cloud-api.yandex.net/v1/disk/resources?path=";
-const  API_FILES = "https://cloud-api.yandex.net/v1/disk/resources/download?path=";
+const API_FOLDERS = "https://cloud-api.yandex.net/v1/disk/resources?path=";
+const API_FILES = "https://cloud-api.yandex.net/v1/disk/resources/download?path=";
+const API_UPLOAD = "https://cloud-api.yandex.net:443/v1/disk/resources/upload?path=";
+const API_DELETE = "https://cloud-api.yandex.net:443/v1/disk/resources?path=";
 
 class App extends React.Component {
-constructor(){
-    super();
-    this.state = {token: ""};
-}
+
+state = {token: ""};
 
 componentWillMount(){
     if (document.location.hash){
@@ -27,7 +30,7 @@ componentWillMount(){
     } 
 
     const cookie_token = this.getCookie("token");
-    if(cookie_token && cookie_token !='LOGOUT'){
+    if(cookie_token && cookie_token !=='LOGOUT'){
         this.setState({token: cookie_token});
         return;
     }
@@ -41,7 +44,7 @@ getCookie(name) {
 }
 
 setCookie(name, token){
-    var date = new Date;
+    var date = new Date();
     date.setDate(date.getDate() + 365);
     const collectCookie = name + "=" + token + "; path=/; expires=" + date;
     document.cookie = collectCookie;  
@@ -74,6 +77,7 @@ class YandexDisk extends React.Component {
                   const arrayFolders = result._embedded.path.split("/");
                   this.preloader('hide');
                   this.setState({disk: this.arrayDisk, folder: arrayFolders});
+                  return true;
               },
               (error) => {
                   console.log(error);
@@ -106,6 +110,37 @@ class YandexDisk extends React.Component {
             );
     }
 
+
+    deleteFile(file_name){     
+        const folder_path = this.state.folder.join('/').replace('disk:/', '') + '/';
+        const FILE_URL = API_DELETE + folder_path + file_name;
+        console.log('del', FILE_URL);
+        const headers = new Headers({ 
+            'Authorization' : `OAuth ` + this.props.token,
+        });
+        const init = {
+            method: 'DELETE',
+            headers: headers
+        };
+
+
+        fetch(FILE_URL, init).then(response => 
+          response.json()).then(
+              (result) =>{
+                  console.log('del');            
+              },
+              (error) => {
+                  console.log(error);
+              }
+            )
+            .catch(error => {
+                  this.setState({error : "Ошибка удаления файла"}) 
+               }
+            );
+
+    }    
+
+
     changeFolders(event){
       event.preventDefault();  
       const arrayFolders = event.target.href.split("/");
@@ -130,6 +165,7 @@ class YandexDisk extends React.Component {
 
 render(){
 return(
+    <React.Fragment>
     <div className="container">
     <div className="row">
     <div className="col-md-12">
@@ -139,15 +175,125 @@ return(
     <h3><span className='glyphicon glyphicon-folder-open current-dir'></span>
     <BreadCrumbs folder ={this.state.folder} link={this.changeFolders.bind(this)}/>
     </h3>
+    <FileUpload folder={this.state.folder} token={this.props.token}/>
     <table className="table table-bordered table-striped table-hover"><tbody>
-    <BildFileTree disk={this.state.disk} folder={this.getFolder.bind(this)} file={this.getFile.bind(this)}/>   
+    <BildFileTree disk={this.state.disk} folder={this.getFolder.bind(this)} file={this.getFile.bind(this)} delete={this.deleteFile.bind(this)}/>   
     </tbody></table> 
     <h3>{this.state.error}</h3>
     </div>
     </div>
     </div>
+    </React.Fragment>
         )
     }
+}
+
+class FileUpload extends React.Component{
+static defaultProps = {
+    token: 'token', 
+    folder: ['disk:','Temp']
+}
+
+state = {buttonLabel: 'Выберите файлы', buttonClass: 'hidden'}
+
+getUploadLink(event) {
+        event.preventDefault();
+
+        const form = this.fileInput.files[0];
+
+
+
+        //console.log(event.target, 'formData == ', formData);
+
+        const file_on_local_disk = this.fileInput.files[0];
+        const file_name = this.fileInput.files[0].name;
+        console.log("тип файла:", file_on_local_disk.type);
+        const file_path = this.props.folder.reduce((previousValue, currentItem) => currentItem && (previousValue + '/' + currentItem)) + '/';
+        const FOLDER_URL = API_UPLOAD + file_path + file_name +'&overwrite=true';
+        const headers = new Headers({
+            'Authorization' : 'OAuth ' + this.props.token,
+            'Content-Type' : 'application/json'
+        });
+        const init = {
+            method: 'GET',
+            headers: headers
+        };
+        fetch(FOLDER_URL, init).then(response =>
+                response.json()).then(
+                (result) => {
+                    this.uploadFile(result.href, file_on_local_disk);
+                },
+                (error) => {
+                    console.log(error);
+                }
+            )
+    }
+
+uploadFile (file_url, file_on_local_disk){
+
+    const idform = document.getElementById('sentfile');
+    const formData = new FormData(idform);
+
+    console.log(idform, "данные для загрузки", formData);
+   // const headers = new Headers({
+        //Accept: 'application/json',
+        //'Content-Type' : 'application/json',
+        //'Content-Transfer-Encoding': 'binary',
+        //'Access-Control-Allow-Headers' : 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+        //'Content-Length': file_on_local_disk.size
+   // });
+
+    var myInit = {
+        method: 'PUT',
+        body: file_on_local_disk
+    };
+
+    // var body = formData;
+    // var xhr = new XMLHttpRequest();
+    // xhr.upload.onprogress = function(event) {
+    //     console.log(event.loaded + ' / ' + event.total);
+    //   }
+    // xhr.open('PUT', file_url, true);
+    // xhr.send(body);
+    // xhr.onreadystatechange = function() {
+    //     if (xhr.readyState !== 4) return;
+    //   console.log('!== 4')
+    //     if (xhr.status !== 200) {
+    //         console.log(xhr.status + ': ' + xhr.statusText);
+    //     } else {
+    //         console.log(xhr.responseText);
+    //     }  
+    //   }
+
+
+   fetch(file_url, myInit).then(response =>
+            response.json()).then(
+            (result) => {
+                console.log(result);
+            },
+            (error) => {
+                console.log(error);
+            }
+        )
+
+
+
+}
+
+fileInputChange(event){
+    const buttonText = (event.target.files.length > 0) ? 'Выбрано файлов: ' + event.target.files.length : 'Выберите файлы';
+    this.setState({buttonLabel: buttonText, buttonClass : ''});
+}
+
+render(){
+return(<div>
+<form id="sentfile" name="uploadfile" onSubmit={this.getUploadLink.bind(this)}>
+<label htmlFor="fileinput" className="btn btn-link text-uppercase">{this.state.buttonLabel}</label>
+<input name="filename" type="file" ref={input => {this.fileInput = input;}}  id="fileinput" className="hidden" multiple="multiple" onChange={this.fileInputChange.bind(this)} />
+<Button  class={'btn btn-primary text-uppercase ' + this.state.buttonClass}>ЗАГРУЗИТЬ</Button>
+</form>
+</div>)
+}
 }
 
 const LogOut = (props) => {
@@ -162,17 +308,22 @@ const Preloader = (props) =>{
 
 const BreadCrumbs = (props) =>{
     return props.folder.map((item, index) => (
-        item && <span><a href={props.folder.slice(0, index + 1).join('/')} onClick={props.link}>{item}</a>&nbsp;/ </span>
+        item && <span key={item}><a href={props.folder.slice(0, index + 1).join('/')} onClick={props.link}>{item}</a>&nbsp;/ </span>
 )); 
 }
 
 const BildFileTree = (props) =>{
     return props.disk.map((item)=> (
-        <tr>
-             {item.type == 'dir' ?
-                (<td onClick={()=>props.folder(item.name)}><span className='glyphicon glyphicon-folder-close style-dir'></span>{item.name}</td>)
+        <tr key={item.name}>
+             {item.type === 'dir' ?
+                (<td onClick={()=>props.folder(item.name)} colSpan="2"><span className='glyphicon glyphicon-folder-close style-dir'></span>{item.name}</td>)
                 :
-                (<td onClick={()=>props.file(item.name)}><span className='glyphicon glyphicon-file style-file'></span>{item.name}</td>)
+                (
+                <React.Fragment>
+                <td onClick={()=>props.file(item.name)}><span className='glyphicon glyphicon-file style-file'></span>{item.name}</td>
+                <td onClick={()=>props.delete(item.name)} className="trash"><span className='glyphicon glyphicon-trash style-file'></span></td>
+                 </React.Fragment>
+                )
              }      
         </tr>
         ));
@@ -185,6 +336,7 @@ class Token extends React.Component {
     }
     render(){
         return(
+            <React.Fragment>
             <div className="container">
               <div className="row"><div className="col-md-12">
               <h2>Яндекс Диск</h2>
@@ -197,8 +349,15 @@ class Token extends React.Component {
               </div>
               </div></div>
             </div>
+            </React.Fragment>
         )
     }
+}
+
+
+
+const Button = (props) =>{
+return <button className={props.class} onClick={props.onExecute}>{props.children}</button>
 }
 
 //  Main

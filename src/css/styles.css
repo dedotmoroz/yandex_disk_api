@@ -19,6 +19,17 @@ body{
 	color: #ffa200;
 }
 
+.trash {
+	width:5%;
+	text-align: center;
+	border-left: none;
+}
+
+.table-bordered > tbody > tr > td {
+	border-right: none;
+	border-left: none;
+}
+
 h3{
 font-size: 20px;
 }
