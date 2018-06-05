@@ -198,13 +198,7 @@ state = {buttonLabel: 'Выберите файлы', buttonClass: 'hidden'}
 
 getUploadLink(event) {
         event.preventDefault();
-
         const form = this.fileInput.files[0];
-
-
-
-        //console.log(event.target, 'formData == ', formData);
-
         const file_on_local_disk = this.fileInput.files[0];
         const file_name = this.fileInput.files[0].name;
         console.log("тип файла:", file_on_local_disk.type);
@@ -230,22 +224,13 @@ getUploadLink(event) {
     }
 
 uploadFile (file_url, file_on_local_disk){
-
     const idform = document.getElementById('sentfile');
-    const formData = new FormData(idform);
-
-    console.log(idform, "данные для загрузки", formData);
-   // const headers = new Headers({
-        //Accept: 'application/json',
-        //'Content-Type' : 'application/json',
-        //'Content-Transfer-Encoding': 'binary',
-        //'Access-Control-Allow-Headers' : 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-        //'Content-Length': file_on_local_disk.size
-   // });
-
+    const formData = new FormData();
+    formData.append('file', file_on_local_disk);
+    console.log("данные для загрузки", formData.get('file'));
     var myInit = {
         method: 'PUT',
-        body: file_on_local_disk
+        body: formData
     };
 
     // var body = formData;
@@ -265,19 +250,15 @@ uploadFile (file_url, file_on_local_disk){
     //     }  
     //   }
 
-
-   fetch(file_url, myInit).then(response =>
-            response.json()).then(
+   fetch(file_url, myInit)
+   .then(
             (result) => {
-                console.log(result);
+                console.log('succsess:', result);
             },
             (error) => {
-                console.log(error);
+                console.log('fail:', error);
             }
         )
-
-
-
 }
 
 fileInputChange(event){
@@ -289,7 +270,7 @@ render(){
 return(<div>
 <form id="sentfile" name="uploadfile" onSubmit={this.getUploadLink.bind(this)}>
 <label htmlFor="fileinput" className="btn btn-link text-uppercase">{this.state.buttonLabel}</label>
-<input name="filename" type="file" ref={input => {this.fileInput = input;}}  id="fileinput" className="hidden" multiple="multiple" onChange={this.fileInputChange.bind(this)} />
+<input name="file" type="file" ref={input => {this.fileInput = input;}}  id="fileinput" className="hidden" multiple="multiple" onChange={this.fileInputChange.bind(this)} />
 <Button  class={'btn btn-primary text-uppercase ' + this.state.buttonClass}>ЗАГРУЗИТЬ</Button>
 </form>
 </div>)
