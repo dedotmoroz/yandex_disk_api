@@ -16,6 +16,16 @@ const API_FILES = "https://cloud-api.yandex.net/v1/disk/resources/download?path=
 const API_UPLOAD = "https://cloud-api.yandex.net:443/v1/disk/resources/upload?path=";
 const API_DELETE = "https://cloud-api.yandex.net:443/v1/disk/resources?path=";
 
+
+
+async function API (requests, init){
+    const response = await fetch(requests, init);
+    const json = await response.json();
+    return json;
+}
+
+
+
 class App extends React.Component {
 
 state = {token: ""};
@@ -198,7 +208,6 @@ state = {buttonLabel: 'Выберите файлы', buttonClass: 'hidden'}
 
 getUploadLink(event) {
         event.preventDefault();
-        const form = this.fileInput.files[0];
         const file_on_local_disk = this.fileInput.files[0];
         const file_name = this.fileInput.files[0].name;
         console.log("тип файла:", file_on_local_disk.type);
@@ -212,19 +221,26 @@ getUploadLink(event) {
             method: 'GET',
             headers: headers
         };
-        fetch(FOLDER_URL, init).then(response =>
-                response.json()).then(
-                (result) => {
-                    this.uploadFile(result.href, file_on_local_disk);
-                },
-                (error) => {
-                    console.log(error);
-                }
-            )
+
+
+        API(FOLDER_URL, init).then(json =>{
+            this.uploadFile(json.href, file_on_local_disk);
+        });
+
+        // fetch(FOLDER_URL, init).then(response =>
+        //         response.json()).then(
+        //         (result) => {
+        //             this.uploadFile(result.href, file_on_local_disk);
+        //         }
+        //     )
     }
 
+
+
+
+
+
 uploadFile (file_url, file_on_local_disk){
-    const idform = document.getElementById('sentfile');
     const formData = new FormData();
     formData.append('file', file_on_local_disk);
     console.log("данные для загрузки", formData.get('file'));
@@ -250,15 +266,15 @@ uploadFile (file_url, file_on_local_disk){
     //     }  
     //   }
 
-   fetch(file_url, myInit)
-   .then(
-            (result) => {
-                console.log('succsess:', result);
-            },
-            (error) => {
-                console.log('fail:', error);
-            }
-        )
+
+    // API(file_url, myInit).then(json =>{
+    //     console.log('succsess ++++')
+    //     // console.log('succsess:', json)
+    // });
+
+   fetch(file_url, myInit).then(
+        (result) => {console.log('succsess:', result)}
+    )
 }
 
 fileInputChange(event){
