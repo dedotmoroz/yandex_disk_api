@@ -5,12 +5,10 @@
 
 # testing
 /coverage
+/Files_for_test
 
 # production
 /build
-
-# test
-/Files_for_test
 
 # public
 /public
