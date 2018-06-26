@@ -135,8 +135,15 @@ class YandexDisk extends React.Component {
 
         fetch(FILE_URL, init).then(response => {
                   console.log('del', response.status); 
-                  if (response.status == 204){
-                    this.getFolder();
+                  if (response.status === 204){
+                    console.log(this.state.disk);  
+                    const arr = this.state.disk.filter(item => {
+                        console.log(item.name);
+                        if (item.name !== file_name) return true;
+                    })
+                    console.log(arr);
+                    this.setState({disk: arr});
+                    //this.getFolder();
                   }
               }
             )
@@ -200,81 +207,45 @@ static defaultProps = {
     folder: ['disk:','Temp']
 }
 
-state = {buttonLabel: 'Выберите файлы', buttonClass: 'hidden'}
+state = {buttonLabel: 'Выберите файлы для загрузки', buttonClass: 'hidden'}
 
 getUploadLink(event) {
         event.preventDefault();
         const file_on_local_disk = this.fileInput.files[0];
         const file_name = this.fileInput.files[0].name;
-        console.log("тип файла:", file_on_local_disk.type);
         const file_path = this.props.folder.reduce((previousValue, currentItem) => currentItem && (previousValue + '/' + currentItem)) + '/';
         const FOLDER_URL = API_UPLOAD + file_path + file_name +'&overwrite=true';
         const headers = new Headers({
             'Authorization' : 'OAuth ' + this.props.token,
             'Content-Type' : 'application/json'
         });
+
         const init = {
             method: 'GET',
             headers: headers
         };
 
+        const formData = new FormData();
+        formData.append('file', file_on_local_disk);
 
-        API(FOLDER_URL, init).then(json =>{this.uploadFile(json.href, file_on_local_disk);});
+        var myInit = {
+            method: 'PUT',
+            body: formData
+        };
 
-        // fetch(FOLDER_URL, init).then(response =>
-        //         response.json()).then(
-        //         (result) => {
-        //             this.uploadFile(result.href, file_on_local_disk);
-        //         }
-        //     )
+        async function uploadFile(){
+            const response =  await fetch(FOLDER_URL, init);
+            const json = await response.json();
+            const dispatch = await fetch(json.href, myInit);
+            console.info(dispatch.console);
+        }
+
+        uploadFile();
     }
 
 
-
-
-
-
-uploadFile (file_url, file_on_local_disk){
-    const formData = new FormData();
-    formData.append('file', file_on_local_disk);
-    console.log("данные для загрузки", formData.get('file'));
-    var myInit = {
-        method: 'PUT',
-        body: formData
-    };
-
-    // var body = formData;
-    // var xhr = new XMLHttpRequest();
-    // xhr.upload.onprogress = function(event) {
-    //     console.log(event.loaded + ' / ' + event.total);
-    //   }
-    // xhr.open('PUT', file_url, true);
-    // xhr.send(body);
-    // xhr.onreadystatechange = function() {
-    //     if (xhr.readyState !== 4) return;
-    //   console.log('!== 4')
-    //     if (xhr.status !== 200) {
-    //         console.log(xhr.status + ': ' + xhr.statusText);
-    //     } else {
-    //         console.log(xhr.responseText);
-    //     }  
-    //   }
-
-
-    // API(file_url, myInit).then(json =>{
-    //     console.log('succsess ++++')
-    //     // console.log('succsess:', json)
-    // });
-
-   fetch(file_url, myInit).then(
-        (result) => {
-            console.log('succsess:', result);
-        }
-    )
-}
-
 fileInputChange(event){
-    const buttonText = (event.target.files.length > 0) ? 'Выбрано файлов: ' + event.target.files.length : 'Выберите файлы';
+    const buttonText = (event.target.files.length > 0) ? `Файл: ${event.target.files[0].name}` : `Выберите файл для загрузки`;
     this.setState({buttonLabel: buttonText, buttonClass : ''});
 }
 
