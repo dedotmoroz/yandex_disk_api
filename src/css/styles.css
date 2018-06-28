@@ -25,6 +25,12 @@ body{
 	border-left: none;
 }
 
+
+.table tr{
+/* transition-property: all;
+transition-duration: 0.2s; */
+}
+
 .table-bordered > tbody > tr > td {
 	border-right: none;
 	border-left: none;
