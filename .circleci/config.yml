@@ -5,10 +5,3 @@ jobs:
     docker:
       - image: circleci/node:6
       
-orbs:
-    hello: circleci/hello-build@0.0.7 # uses the circleci/buildpack-deps Docker image
-
-workflows:
-    "Hello Workflow":
-        jobs:
-          - hello/hello-build
