@@ -3,6 +3,7 @@ import 'core-js/es6/set';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import Transition from 'react-transition-group/Transition';
 import './css/bootstrap.css';
 import './css/styles.css';
 
@@ -26,10 +27,11 @@ async function API(requests, init) {
 }
 
 class App extends React.Component {
-
-    state = {
-        token: ""
-    };
+constructor(){
+    super();
+    this.state = {token: ""};
+}
+    
 
     componentWillMount() {
         if (document.location.hash) {
@@ -293,6 +295,7 @@ class FileUpload extends React.Component {
         buttonClass: 'hidden'
     }
 
+
     getUploadLink(event) {
         event.preventDefault();
         const file_on_local_disk = this.fileInput.files[0];
@@ -315,21 +318,50 @@ class FileUpload extends React.Component {
         const formData = new FormData();
         formData.append('file', file_on_local_disk);
 
-        var myInit = {
-            method: 'PUT',
-            body: formData
-        };
+        // var myInit = {
+        //     method: 'PUT',
+        //     body: formData
+        // };
 
-        const uploadFile = async() => {
+        const uploadFile = (async() => {
             this.props.preloader('show');
             const response = await fetch(FOLDER_URL, init);
             const json = await response.json();
-            await fetch(json.href, myInit);
+
+
+            // await fetch(json.href, myInit);
+            const dispatch = await uploadXMLHttpRequest(json.href, formData);    
             this.props.fileList_Add(file_name, 'add');
             this.props.preloader('hide');
-        }
+            this.setState({buttonLabel: 'Выберите файлы для загрузки', buttonClass: 'hidden'});
+        })();
 
-        uploadFile();
+
+        const uploadXMLHttpRequest = function(url, formData){
+            const xhr = new XMLHttpRequest();
+            // const preloader = new Preloader();
+            // preloader.create();
+            xhr.upload.onprogress = (event) => {
+                // console.log('xhr.upload.onprogress', event);
+                let process = parseFloat(event.loaded / event.total) * 100;
+                this.setState({loader: process, statys: 'pending'});
+            }
+            xhr.onload = () =>{
+                 //console.log('xhr.onload', event, 'this - ', this, 'xhr.status', xhr);
+                //console.log('xhr.status', xhr.status);
+                if (xhr.status === 201) {
+                this.setState({loader: 100, statys: 'success'});
+                    // console.log("success", this.status);
+                    // preloader.success();
+                } else {
+                    // console.log("error " + this.status);
+                    // preloader.error(this.status);
+                }
+            }
+            xhr.open('PUT', url);
+            xhr.send(formData);
+        }.bind(this);
+
     }
 
     fileInputChange(event) {
@@ -367,10 +399,66 @@ class FileUpload extends React.Component {
                         .bind(this)}/>
                     <Button class={'btn btn-primary text-uppercase ' + this.state.buttonClass}>ЗАГРУЗИТЬ</Button>
                 </form>
+                   <PreloaderFile in={true} timeout={1000} loader={this.state.loader} statys={this.state.statys}/>
+                   {/* {(this.state.statys === 'pending')&&<PreloaderFile loader={this.state.loader} statys={this.state.statys}/>} */}
             </div>
         )
     }
 }
+
+const PreloaderFile = ({loader = 0, statys = 'pending'}) => {
+    return <div className={'template_preloader fix' + ((statys === 'success')? ' hiden' : '')}>
+    <div className="progress">
+       <div style={{width: ((statys === 'success')? '100%' : loader - 5 + '%')}} className="progress-bar progress-bar-striped progress-bar-animated"></div>
+    </div>
+    </div>
+    }
+
+
+// class Animated extends React.Component {
+// constructor(){
+//     super();
+//     this.state = {pr: 'this.props.children'}
+//     console.log('1');
+// }
+
+// componentWillMount(){
+    
+// }
+
+//     componentWillReceiveProps(nextProps) {
+
+//         if (this.props.children.props.statys === 'success') console.log('statys: ', 'success');
+//         if (this.props.children && !nextProps.children) {
+//         }
+//       }
+
+// componentDidUpdate(){
+//     console.log('2', this.props.children.props);
+//     console.log('statys: ', this.props.children.props.statys);
+// }
+
+//     render(){
+//         return <React.Fragment>
+//             {this.props.children}
+//             {console.log('3')}
+//         </React.Fragment>
+//     }
+// }
+
+// class PreloaderFile extends React.Component {
+// componentWillUnmount(){
+//     console.log('componentWillUnmount');
+// }    
+// render(){   
+// return <div className={'template_preloader fix' + ((this.props.statys === 'success')? ' hiden' : '')}>
+// <div className="progress">
+//    <div style={{width: ((this.props.statys === 'success')? '100%' : this.props.loader - 5 + '%')}} className="progress-bar progress-bar-striped progress-bar-animated"></div>
+// </div>
+// </div>
+// } }
+
+
 
 const LogOut = (props) => {
     return <div className="log-out" onClick={props.linkout}>

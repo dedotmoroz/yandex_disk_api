@@ -7,12 +7,30 @@ body{
 	overflow-y: scroll;
 }
 
+.fix{
+	position: fixed;
+    bottom: 0px;
+	left: 0px;
+	width: 100%;
+	background: #fff;
+	z-index: 100;
+}
+
 .log-out{
 	display: block;
 	position: absolute;
 	right: 20px;
 	margin-top: -33px; 
 	cursor: pointer;
+}
+
+.hiden {
+	animation: hide-block 2s; 
+}
+
+@keyframes hide-block{
+	0% {opacity: 1;}
+	100% {opacity: 0; display: none;}
 }
 
 .log-out:hover{
